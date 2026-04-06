@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+uv run --extra dev ruff format .
+uv run --extra dev ruff check .
+uv run --extra dev pytest
