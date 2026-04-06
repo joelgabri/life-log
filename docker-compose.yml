@@ -2,13 +2,13 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: lifelog
-      POSTGRES_PASSWORD: lifelog
-      POSTGRES_DB: lifelog
+      POSTGRES_USER: ${POSTGRES_USER:-lifelog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lifelog}
+      POSTGRES_DB: ${POSTGRES_DB:-lifelog}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lifelog"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lifelog}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -17,9 +17,9 @@ services:
   api:
     build: .
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     environment:
-      DATABASE_URL: postgresql://lifelog:lifelog@db:5432/lifelog
+      DATABASE_URL: ${DATABASE_URL:-postgresql://lifelog:lifelog@db:5432/lifelog}
     depends_on:
       db:
         condition: service_healthy
