@@ -8,12 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Install dependencies (including dev)
 uv sync
 
-# Run tests, lint, and format (use this to verify work)
+# Run tests, lint, and format — always prefer this over running pytest directly
 ./check
-
-# Run a single test
-uv run pytest tests/test_keys.py
-uv run pytest tests/test_keys.py::test_create_key_returns_raw_key
 
 # Run the API locally (requires a running Postgres)
 uv run uvicorn app.main:app --reload
@@ -38,9 +34,10 @@ python manage.py delete-key <uuid>
 
 FastAPI app (`app/`) backed by PostgreSQL via SQLAlchemy (sync ORM, not async).
 
-**Request flow:** `app/main.py` mounts two routers under `/api/v1`:
+**Request flow:** `app/main.py` mounts three routers under `/api/v1`:
 - `routers/entries.py` — write/read life-log entries (`write:entries`, `read:entries` scopes)
 - `routers/keys.py` — CRUD for API keys (`admin` scope only)
+- `routers/owntracks.py` — ingest OwnTracks location pings (`write:entries` scope); normalises and upserts as `type="location"` entries
 
 **Auth:** Every protected endpoint depends on `auth.require_scope(scope)`, which reads `X-Api-Key` from the request header, SHA-256 hashes it, looks it up in `api_keys`, and checks scopes. Raw keys are never stored. `admin` scope bypasses all other scope checks.
 

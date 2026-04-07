@@ -4,12 +4,13 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from .database import get_db
-from .routers import entries, keys
+from .routers import entries, keys, owntracks
 
 app = FastAPI(title="Life Log")
 
 app.include_router(entries.router, prefix="/api/v1")
 app.include_router(keys.router, prefix="/api/v1")
+app.include_router(owntracks.router, prefix="/api/v1")
 
 
 @app.get("/health")
