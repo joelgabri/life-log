@@ -11,7 +11,7 @@ app = FastAPI(title="Life Log")
 app.include_router(entries.router, prefix="/api/v1")
 app.include_router(keys.router, prefix="/api/v1")
 app.include_router(owntracks.router, prefix="/api/v1")
-app.include_router(waistline.router)
+app.include_router(waistline.router, prefix="/api/v1")
 
 
 @app.get("/health")

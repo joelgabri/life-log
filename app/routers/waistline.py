@@ -10,7 +10,7 @@ from ..auth import SCOPE_WRITE_ENTRIES, require_scope_authorization
 from ..database import get_db
 from .entries import _upsert_entry
 
-router = APIRouter(prefix="/waistline/api/v1", tags=["waistline"])
+router = APIRouter(prefix="/waistline", tags=["waistline"])
 
 
 class WaistlineDiaryEntry(BaseModel):
