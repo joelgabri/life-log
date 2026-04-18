@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import secrets
 from datetime import datetime, timezone
@@ -48,6 +49,30 @@ def _check_scope(scope: str, key: models.ApiKey) -> models.ApiKey:
 
 def require_scope(scope: str):
     def checker(key: models.ApiKey = Depends(get_api_key)) -> models.ApiKey:
+        return _check_scope(scope, key)
+
+    return checker
+
+
+def get_api_key_basic_or_header(
+    x_api_key: str | None = Header(default=None, alias="X-Api-Key"),
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+) -> models.ApiKey:
+    if x_api_key:
+        return _lookup_key(x_api_key, db)
+    if authorization and authorization.lower().startswith("basic "):
+        try:
+            decoded = base64.b64decode(authorization.split(" ", 1)[1]).decode()
+            password = decoded.split(":", 1)[1] if ":" in decoded else decoded
+        except (ValueError, UnicodeDecodeError):
+            raise HTTPException(status_code=401, detail="Invalid Authorization header")
+        return _lookup_key(password, db)
+    raise HTTPException(status_code=401, detail="Authentication required")
+
+
+def require_scope_basic_or_header(scope: str):
+    def checker(key: models.ApiKey = Depends(get_api_key_basic_or_header)) -> models.ApiKey:
         return _check_scope(scope, key)
 
     return checker

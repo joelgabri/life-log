@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
@@ -111,6 +112,57 @@ def test_owntracks_ignores_non_location_type(client, write_key, read_key):
 
 def test_owntracks_requires_auth(client):
     resp = client.post("/api/v1/owntracks", json=OWNTRACKS_PAYLOAD)
+    assert resp.status_code == 401
+
+
+def _basic(username: str, password: str) -> str:
+    return "Basic " + base64.b64encode(f"{username}:{password}".encode()).decode()
+
+
+def test_owntracks_basic_auth(client, write_key):
+    resp = client.post(
+        "/api/v1/owntracks",
+        json=OWNTRACKS_PAYLOAD,
+        headers={"Authorization": _basic("user", write_key)},
+    )
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_owntracks_basic_auth_empty_username(client, write_key):
+    resp = client.post(
+        "/api/v1/owntracks",
+        json=OWNTRACKS_PAYLOAD,
+        headers={"Authorization": _basic("", write_key)},
+    )
+    assert resp.status_code == 200
+
+
+def test_owntracks_basic_auth_key_only_no_colon(client, write_key):
+    credentials = base64.b64encode(write_key.encode()).decode()
+    resp = client.post(
+        "/api/v1/owntracks",
+        json=OWNTRACKS_PAYLOAD,
+        headers={"Authorization": f"Basic {credentials}"},
+    )
+    assert resp.status_code == 200
+
+
+def test_owntracks_basic_auth_wrong_key(client):
+    resp = client.post(
+        "/api/v1/owntracks",
+        json=OWNTRACKS_PAYLOAD,
+        headers={"Authorization": _basic("user", "wrong_key")},
+    )
+    assert resp.status_code == 401
+
+
+def test_owntracks_basic_auth_malformed(client):
+    resp = client.post(
+        "/api/v1/owntracks",
+        json=OWNTRACKS_PAYLOAD,
+        headers={"Authorization": "Basic !!!not-valid-base64!!!"},
+    )
     assert resp.status_code == 401
 
 

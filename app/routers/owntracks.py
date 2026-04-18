@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
-from ..auth import SCOPE_WRITE_ENTRIES, require_scope
+from ..auth import SCOPE_WRITE_ENTRIES, require_scope_basic_or_header
 from ..database import get_db
 from ..services.weather import fetch_weather_entry, weather_external_id
 from .entries import _upsert_entry
@@ -28,7 +28,7 @@ class OwnTracksPayload(BaseModel):
 def receive_owntracks(
     payload: OwnTracksPayload,
     db: Session = Depends(get_db),
-    _key=Depends(require_scope(SCOPE_WRITE_ENTRIES)),
+    _key=Depends(require_scope_basic_or_header(SCOPE_WRITE_ENTRIES)),
 ):
     if payload.type_ != "location":
         return []
