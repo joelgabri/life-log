@@ -52,11 +52,29 @@ def create_entries_batch(
     db: Session = Depends(get_db),
     _key=Depends(require_scope(SCOPE_WRITE_ENTRIES)),
 ):
-    results = [_upsert_entry(db, entry) for entry in entries]
+    seen: dict[tuple[str, str], int] = {}
+    deduped: list[schemas.EntryCreate] = []
+    original_to_deduped: list[int] = []
+    for entry in entries:
+        if entry.external_id is not None:
+            key = (entry.type, entry.external_id)
+            if key in seen:
+                deduped[seen[key]] = entry
+                original_to_deduped.append(seen[key])
+            else:
+                idx = len(deduped)
+                seen[key] = idx
+                original_to_deduped.append(idx)
+                deduped.append(entry)
+        else:
+            idx = len(deduped)
+            original_to_deduped.append(idx)
+            deduped.append(entry)
+    deduped_results = [_upsert_entry(db, entry) for entry in deduped]
     db.commit()
-    for r in results:
+    for r in deduped_results:
         db.refresh(r)
-    return results
+    return [deduped_results[i] for i in original_to_deduped]
 
 
 @router.get("/", response_model=list[schemas.EntryResponse])

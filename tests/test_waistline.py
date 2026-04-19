@@ -18,7 +18,7 @@ WAISTLINE_PAYLOAD = {
     ],
 }
 
-_URL = "/waistline/api/v1/sync"
+_URL = "/api/v1/waistline/sync"
 
 
 def test_waistline_sync_stored(client, write_key):
